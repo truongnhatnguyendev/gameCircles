@@ -1,0 +1,29 @@
+.game-container {
+  margin: 0 auto;
+}
+
+.scoreboard {
+  margin-bottom: 20px;
+}
+
+.game-board {
+  width: 50vw;
+  height: 70vh;
+  border: 1px solid black;
+  margin: 0 auto;
+  position: relative;
+}
+
+.circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid black;
+  color: rgb(22, 21, 21);
+  cursor: pointer;
+  transition: background-color 0.1s ease;
+}
