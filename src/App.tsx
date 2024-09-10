@@ -1,10 +1,10 @@
 import "./App.css";
-import { Game } from "./Game";
+import { GameCircle } from "./Game/GameCircle";
 
 function App() {
   return (
     <div>
-      <Game />
+      <GameCircle />
     </div>
   );
 }

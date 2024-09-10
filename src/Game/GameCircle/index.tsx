@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import "./game.css";
 
 interface Circle {
   id: number;
   position: { top: number; left: number };
-  visible: boolean;
   color: string;
+  backgroundColor: string;
 }
 
 enum StatusEnum {
@@ -14,21 +14,16 @@ enum StatusEnum {
   LOSE = "GAME OVER",
 }
 
-export function Game() {
+export function GameCircle() {
   const [circles, setCircles] = useState<Circle[]>([]);
-  const [points, setPoints] = useState<number>();
+  const [points, setPoints] = useState<number>(0);
   const [time, setTime] = useState<number>(0.0);
   const [timerRunning, setTimerRunning] = useState(false);
   const [gameStarted, setGameStarted] = useState(false);
 
-  const [nextCircleId, setNextCircleId] = useState<number>(1);
-  const [gameStatus, setGameStatus] = useState<string>(StatusEnum.default);
+  // const [clickedIds, setClickedIds] = useState<number[]>([]);
 
-  useEffect(() => {
-    if (gameStarted) {
-      startGame();
-    }
-  }, [gameStarted]);
+  const [gameStatus, setGameStatus] = useState<string>(StatusEnum.default);
 
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -40,59 +35,70 @@ export function Game() {
     return () => clearInterval(interval);
   }, [timerRunning]);
 
-  const startGame = () => {
-    setCircles(
-      Array.from({ length: points as number }, (_, i) => ({
-        id: i + 1,
-        position: {
-          top: Math.random() * 95,
-          left: Math.random() * 95,
-        },
-        visible: true,
-        color: "white",
-      }))
-    );
+  const startGame = useCallback(() => {
+    const newCircles = Array.from({ length: points }, (_, i) => ({
+      id: i + 1,
+      position: {
+        top: Math.random() * 95,
+        left: Math.random() * 95,
+      },
+      color: "black",
+      backgroundColor: "white",
+    }));
+    setCircles(newCircles);
     setTimerRunning(true);
-  };
+  }, [points]);
 
+  const clickedIds = useRef<number[]>([]);
   const handleCircleClick = (id: number) => {
-    if (id === nextCircleId && gameStatus !== StatusEnum.LOSE) {
+    clickedIds.current.push(id);
+    const temp = [...circles].filter(
+      (item) => !clickedIds.current.includes(item.id)
+    );
+    const isSmallerId = temp.every((item) => item.id > id);
+    if (isSmallerId && timerRunning === true) {
       setCircles((prevCircles) =>
         prevCircles.map((circle) =>
-          circle.id === id ? { ...circle, color: "red" } : circle
+          circle.id === id
+            ? { ...circle, backgroundColor: "red", color: "white" }
+            : circle
         )
       );
-
       setTimeout(() => {
         setCircles((prevCircles) =>
+          prevCircles.filter((circle) => circle.id !== id)
+        );
+        if (id === points) {
+          setGameStatus(StatusEnum.WIN);
+          setTimerRunning(false);
+        }
+      }, 1000);
+    } else {
+      timerRunning &&
+        setCircles((prevCircles) =>
           prevCircles.map((circle) =>
-            circle.id === id ? { ...circle, visible: false } : circle
+            circle.id === id
+              ? { ...circle, backgroundColor: "red", color: "white" }
+              : circle
           )
         );
-      }, 300);
-
-      setNextCircleId((prevId) => prevId + 1);
-
-      if (id === points) {
-        setGameStatus(StatusEnum.WIN);
-        setTimerRunning(false);
-      }
-    } else {
-      setGameStatus(StatusEnum.LOSE);
       setTimerRunning(false);
+      setGameStatus(StatusEnum.LOSE);
     }
   };
 
   const handlePlay = () => {
-    setGameStarted(true);
+    if (points > 0) {
+      setGameStarted(true);
+      startGame();
+    }
   };
 
   const handleRestart = () => {
     setTime(0.0);
-    setTimerRunning(false);
     setCircles([]);
-    setNextCircleId(1);
     startGame();
+    clickedIds.current = [];
     setGameStatus(StatusEnum.default);
   };
 
@@ -121,34 +127,32 @@ export function Game() {
             <input
               style={{ marginLeft: "10px" }}
               type="number"
-              value={points}
               onChange={(e) => handleChangePoints(parseInt(e.target.value))}
             />
           </div>
-          <div>Time: {time && time.toFixed(1) + "s"}</div>
+          <div>Time: {time.toFixed(1) + "s"}</div>
           <button onClick={gameStarted ? handleRestart : handlePlay}>
             {gameStarted ? "Restart" : "Play"}
           </button>
         </div>
       </div>
       <div className="game-board">
-        {circles
-          .filter((circle) => circle.visible)
-          .map((circle) => (
-            <div
-              key={circle.id}
-              className="circle"
-              style={{
-                top: `${circle.position.top}%`,
-                left: `${circle.position.left}%`,
-                backgroundColor: circle.color,
-                zIndex: points! - circle.id,
-              }}
-              onClick={() => handleCircleClick(circle.id)}
-            >
-              {circle.id}
-            </div>
-          ))}
+        {circles.map((circle) => (
+          <div
+            key={circle.id}
+            className="circle"
+            style={{
+              top: `${circle.position.top}%`,
+              left: `${circle.position.left}%`,
+              backgroundColor: circle.backgroundColor,
+              color: circle.color,
+              zIndex: points! - circle.id,
+            }}
+            onClick={() => handleCircleClick(circle.id)}
+          >
+            {circle.id}
+          </div>
+        ))}
       </div>
     </div>
   );

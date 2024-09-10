@@ -15,14 +15,15 @@
 }
 
 .circle {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
   border: 1px solid black;
+  font-weight: bold;
   color: rgb(22, 21, 21);
   cursor: pointer;
   transition: background-color 0.1s ease;
